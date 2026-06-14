@@ -59,7 +59,7 @@
 
 /* Photo container — draggable/zoomable */
 .c-photo-col{display:flex;flex-direction:column;align-items:center;gap:7px;flex-shrink:0;}
-.c-photo-frame{width:146px;height:186px;border-radius:10px;overflow:hidden;background:#f1f5f9;border:3px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.1);position:relative;cursor:grab;user-select:none;}
+.c-photo-frame{width:146px;height:186px;border-radius:10px;overflow:hidden;background:#f1f5f9;border:3px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.1);position:relative;cursor:grab;user-select:none;flex-shrink:0;}
 .c-photo-frame:active{cursor:grabbing;}
 .c-photo-frame img{position:absolute;transform-origin:top left;will-change:transform;}
 /* photo placeholder centered */
@@ -373,7 +373,7 @@
             <div class="placeholder" id="photoPlaceholder">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
-            <img id="cardPhoto" style="display:none;position:absolute;transform-origin:top left;will-change:transform;pointer-events:none;" alt="">
+            <img id="cardPhoto" style="display:none;pointer-events:none;" alt="">
           </div>
           <div id="cardBadge" style="border-color:#f59e0b;color:#92400e;background:rgba(245,158,11,.1);">CONTRACTOR</div>
         </div>
@@ -494,22 +494,23 @@ function applyPhotoTransform() {
 
 function renderPhotoTransform() {
   if(!photoLoaded) return;
-  // Frame is 146×186, center the image by default
   const fw = 146, fh = 186;
-  const iw = photoImg.naturalWidth || fw;
+  const iw = photoImg.naturalWidth  || fw;
   const ih = photoImg.naturalHeight || fh;
-  // fit cover at scale=1
-  const baseScale = Math.max(fw/iw, fh/ih);
+  // cover scale — ทำให้รูปเต็มกรอบเสมอ
+  const baseScale = Math.max(fw / iw, fh / ih);
   const s = baseScale * photoTransform.scale;
-  // center offset
-  const cx = (fw - iw*s) / 2;
-  const cy = (fh - ih*s) / 2;
-  const tx = cx + photoTransform.x;
-  const ty = cy + photoTransform.y;
-  photoImg.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+  // center + user offset
+  const tx = (fw - iw * s) / 2 + photoTransform.x;
+  const ty = (fh - ih * s) / 2 + photoTransform.y;
+  photoImg.style.position       = 'absolute';
+  photoImg.style.left           = '0';
+  photoImg.style.top            = '0';
+  photoImg.style.width          = iw + 'px';
+  photoImg.style.height         = ih + 'px';
+  photoImg.style.maxWidth       = 'none';
   photoImg.style.transformOrigin = '0 0';
-  photoImg.style.width = iw + 'px';
-  photoImg.style.height = ih + 'px';
+  photoImg.style.transform      = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + s + ')';
 }
 
 function resetPhotoTransform() {
@@ -609,9 +610,16 @@ function handlePhotoUpload(input) {
   document.getElementById('photo-file-name').textContent = f.name;
   const r = new FileReader();
   r.onload = e => {
-    photoLoaded = true;
     photoImg.onload = () => {
-      resetPhotoTransform();
+      photoLoaded = true;
+      // reset offset แต่คง scale ไว้ที่ 1 (cover)
+      photoTransform = { scale: 1, x: 0, y: 0 };
+      document.getElementById('photoZoom').value = 100;
+      document.getElementById('photoX').value    = 0;
+      document.getElementById('photoY').value    = 0;
+      document.getElementById('zoomVal').textContent = '100%';
+      document.getElementById('xVal').textContent    = '0px';
+      document.getElementById('yVal').textContent    = '0px';
       renderPhotoTransform();
     };
     photoImg.src = e.target.result;
