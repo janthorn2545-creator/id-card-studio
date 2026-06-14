@@ -45,17 +45,16 @@
 #toast.error{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
 
 /* ── CARD SHELL ── */
-.id-card-wrap{width:634px;height:400px;position:relative;overflow:hidden;border-radius:20px;
-  box-shadow:0 0 0 1px rgba(255,255,255,.05),0 25px 60px rgba(0,0,0,.7),0 0 100px rgba(99,102,241,.08);flex-shrink:0;}
+.id-card-wrap{width:634px!important;height:400px!important;min-width:634px;min-height:400px;max-width:634px;max-height:400px;position:relative;overflow:hidden;border-radius:20px;box-shadow:0 0 0 1px rgba(255,255,255,.05),0 25px 60px rgba(0,0,0,.7),0 0 100px rgba(99,102,241,.08);flex-shrink:0;}
 
 /* Card header */
-#cardHeader{padding:13px 20px;display:flex;align-items:center;justify-content:space-between;}
+#cardHeader{padding:13px 20px;display:flex;align-items:center;justify-content:space-between;overflow:hidden;gap:8px;}
 .c-logo-box{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.12);display:grid;place-items:center;flex-shrink:0;}
 #cardCompanyName{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;letter-spacing:-.2px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #cardDocNo{font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;margin-left:8px;}
 
 /* Card body */
-.card-body{flex:1;background:#fff;padding:15px 18px;display:flex;gap:16px;align-items:stretch;overflow:hidden;}
+.card-body{flex:1;background:#fff;padding:15px 18px;display:flex;gap:16px;align-items:stretch;overflow:hidden;min-height:0;}
 
 /* Photo container — draggable/zoomable */
 .c-photo-col{display:flex;flex-direction:column;align-items:center;gap:7px;flex-shrink:0;}
@@ -69,11 +68,11 @@
 #cardBadge{width:146px;padding:5px 6px;border-radius:6px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;border:2px solid;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* Info column */
-.c-info-col{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:1px 0;min-width:0;overflow:visible;}
+.c-info-col{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:1px 0;min-width:0;overflow:hidden;}
 .c-field-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:1px;}
-#cardHolderName{font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:700;color:#0f172a;letter-spacing:-.2px;line-height:1.2;white-space:nowrap;overflow:visible;}
-#cardHolderCompany{font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:600;color:#475569;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-#cardCourse{font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:700;color:#1e293b;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+#cardHolderName{font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:700;color:#0f172a;letter-spacing:-.2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+#cardHolderCompany{font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:600;color:#475569;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;}
+#cardCourse{font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:700;color:#1e293b;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;}
 .c-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:7px;border-top:1px solid #e2e8f0;}
 .c-date-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#94a3b8;}
 .c-date-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:#1e293b;margin-top:1px;}
@@ -341,7 +340,7 @@
   </aside>
 
   <!-- PREVIEW MAIN -->
-  <main class="flex-1 flex flex-col items-center py-7 px-6 gap-5" style="background:radial-gradient(ellipse at 60% 20%,rgba(99,102,241,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(245,158,11,.03) 0%,transparent 50%);">
+  <main class="flex-1 flex flex-col items-center py-7 px-6 gap-5" style="background:radial-gradient(ellipse at 60% 20%,rgba(99,102,241,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(245,158,11,.03) 0%,transparent 50%);overflow-x:auto;">
 
     <div class="w-full flex items-center justify-between no-print" style="max-width:680px;">
       <div class="flex items-center gap-2 text-sm font-bold text-slate-400">
@@ -352,7 +351,7 @@
     </div>
 
     <!-- THE CARD -->
-    <div id="id-card-preview" class="id-card-wrap flex flex-col">
+    <div id="id-card-preview" class="id-card-wrap flex flex-col" style="width:634px!important;height:400px!important;font-size:16px;">
       <div id="cardHeader" style="background-color:#1e293b;">
         <div style="display:flex;align-items:center;gap:10px;min-width:0;">
           <div class="c-logo-box" id="cardLogoContainer">
@@ -361,7 +360,7 @@
             </svg>
             <img id="uploadedLogoImg" style="display:none;width:24px;height:24px;object-fit:contain;" alt="">
           </div>
-          <span id="cardCompanyName" style="font-size:15px;">Bolt &amp; Nut Industry Co., Ltd.</span>
+          <span id="cardCompanyName" style="font-size:14px;">Bolt &amp; Nut Industry Co., Ltd.</span>
         </div>
         <div id="cardDocNo" style="color:#f59e0b;font-size:13px;">CON-2026-0BB</div>
       </div>
@@ -381,15 +380,15 @@
         <div class="c-info-col">
           <div>
             <div class="c-field-label">ชื่อ-นามสกุล / NAME</div>
-            <div id="cardHolderName" style="font-size:24px;">พรทิพย์ พัฒนารุ่งเรือง</div>
+            <div id="cardHolderName" style="font-size:22px;">พรทิพย์ พัฒนารุ่งเรือง</div>
           </div>
           <div>
             <div class="c-field-label">บริษัทต้นสังกัด / COMPANY</div>
-            <div id="cardHolderCompany" style="font-size:13px;">บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด</div>
+            <div id="cardHolderCompany" style="font-size:12px;">บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด</div>
           </div>
           <div>
             <div class="c-field-label">หลักสูตร / COURSE</div>
-            <div id="cardCourse" style="font-size:13px;">การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา</div>
+            <div id="cardCourse" style="font-size:12px;">การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา</div>
           </div>
           <div class="c-dates">
             <div><div class="c-date-label">ออกบัตร</div><div id="cardIssueDate" class="c-date-val">3 มิ.ย. 2569</div></div>
@@ -655,10 +654,10 @@ function applyTemplate(t) {
   document.getElementById('badgeTextInput').value = d.badge;
   document.getElementById('footerTextInput').value = d.footer;
   // reset font sizes
-  document.getElementById('nameFontSize').value = 24;
-  document.getElementById('companyFontSize').value = 13;
-  document.getElementById('courseFontSize').value = 13;
-  document.getElementById('headerCompanyFontSize').value = 15;
+  document.getElementById('nameFontSize').value = 22;
+  document.getElementById('companyFontSize').value = 12;
+  document.getElementById('courseFontSize').value = 12;
+  document.getElementById('headerCompanyFontSize').value = 14;
   applyFontSizes();
   updateCardData();
   updateCardDesign();
