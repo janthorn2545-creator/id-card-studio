@@ -650,6 +650,710 @@ function showToast(msg, t='success') {
 }
 
 // ── Download ──────────────────────────────────────────────────────────────────
+async function downloadCardAsImage() {
+  const el = document.getElementById('id-card-preview');
+  const dlBtns = document.querySelectorAll('[onclick="downloadCardAsImage()"]');
+  dlBtns.forEach(b => { b.disabled = true; b.style.opacity = '.6'; });
+  showToast('⏳ กำลังสร้างภาพ รอสักครู่...', 'success');
+
+  try {
+    // 1. รอให้ทุก font โหลดเสร็จก่อน
+    await document.fonts.ready;
+
+    // 2. บังคับ render font ภาษาไทยก่อน capture
+    //    โดยสร้าง invisible element ที่ใช้ font ครบ
+    const primer = document.createElement('div');
+    primer.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;font-size:14px;';
+    primer.innerHTML = `
+      <span style="font-family:'Sarabun',sans-serif;font-weight:700;">ทดสอบภาษาไทย</span>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;">Test</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-weight:500;">CODE</span>
+    `;
+    document.body.appendChild(primer);
+
+    // 3. รอ 1 frame ให้ browser paint
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    // 4. Lock card ขนาดไว้ก่อน capture (ป้องกัน layout เพี้ยน)
+    const origW = el.style.width;
+    const origH = el.style.height;
+    el.style.width  = '634px';
+    el.style.height = '400px';
+
+    // 5. Capture
+    const canvas = await html2canvas(el, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 634,
+      height: 400,
+      windowWidth: 634,
+      onclone: (clonedDoc) => {
+        // ใน cloned doc ให้ card ขนาดคงที่
+        const card = clonedDoc.getElementById('id-card-preview');
+        if (card) {
+          card.style.width  = '634px';
+          card.style.height = '400px';
+          card.style.borderRadius = '0';
+          card.style.boxShadow = 'none';
+          card.style.overflow = 'hidden';
+        }
+        // inject font link ใน cloned doc ด้วย
+        const link = clonedDoc.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap';
+        clonedDoc.head.appendChild(link);
+      }
+    });
+
+    // 6. คืนค่าเดิม
+    el.style.width  = origW;
+    el.style.height = origH;
+    document.body.removeChild(primer);
+
+    // 7. Download
+    const img = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    const name = (document.getElementById('holderNameInput').value || 'ID-Card')
+      .replace(/[^a-zA-Z0-9\u0E00-\u0E7F]/g, '_');
+    a.download = `ID_CARD_${name}.png`;
+    a.href = img;
+    a.click();
+
+    showToast('✅ ดาวน์โหลดเรียบร้อย');
+  } catch(err) {
+    console.error(err);
+    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+  } finally {
+    dlBtns.forEach(b => { b.disabled = false; b.style.opacity = ''; });
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  if(window.lucide) lucide.createIcons();
+  applyTemplate('contractor');
+};
+</script>
+</body>
+</html>.c-logo-box{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.12);display:grid;place-items:center;flex-shrink:0;}
+#cardCompanyName{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;letter-spacing:-.2px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#cardDocNo{font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0;margin-left:8px;}
+
+/* Card body */
+.card-body{flex:1;background:#fff;padding:15px 18px;display:flex;gap:16px;align-items:stretch;overflow:hidden;}
+
+/* Photo container — draggable/zoomable */
+.c-photo-col{display:flex;flex-direction:column;align-items:center;gap:7px;flex-shrink:0;}
+.c-photo-frame{width:146px;height:186px;border-radius:10px;overflow:hidden;background:#f1f5f9;border:3px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.1);position:relative;cursor:grab;user-select:none;}
+.c-photo-frame:active{cursor:grabbing;}
+.c-photo-frame img{position:absolute;transform-origin:top left;will-change:transform;}
+/* photo placeholder centered */
+.c-photo-frame .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.c-photo-frame .placeholder svg{width:48px;height:48px;color:#cbd5e1;}
+
+#cardBadge{width:146px;padding:5px 6px;border-radius:6px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;border:2px solid;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Info column */
+.c-info-col{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:1px 0;min-width:0;}
+.c-field-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:1px;}
+#cardHolderName{font-family:'Sarabun',sans-serif;font-weight:700;color:#0f172a;letter-spacing:-.2px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#cardHolderCompany{font-family:'Sarabun',sans-serif;font-weight:600;color:#475569;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+#cardCourse{font-family:'Sarabun',sans-serif;font-weight:700;color:#1e293b;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.c-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:7px;border-top:1px solid #e2e8f0;}
+.c-date-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#94a3b8;}
+.c-date-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:#1e293b;margin-top:1px;}
+.c-date-val.expiry{color:#ef4444;font-weight:700;}
+
+/* Footer */
+.card-footer-bar{padding:7px 20px;display:flex;align-items:center;justify-content:space-between;background:#0f172a;}
+#cardFooterText{font-size:9.5px;color:rgba(255,255,255,.38);font-family:'Sarabun',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;}
+#cardBarcodeNo{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:rgba(255,255,255,.25);letter-spacing:2.5px;flex-shrink:0;}
+
+/* sidebar scroll */
+#sidebar{overflow-y:auto;max-height:calc(100vh - 112px);}
+#sidebar::-webkit-scrollbar{width:3px;}
+
+@media print{
+  body *{visibility:hidden;}
+  #id-card-preview,#id-card-preview *{visibility:visible;}
+  #id-card-preview{position:absolute;left:0;top:0;}
+  .no-print{display:none;}
+}
+</style>
+</head>
+<body class="min-h-screen dark:bg-[#0f172a] dark:text-slate-100">
+
+<!-- TOPBAR -->
+<header class="sticky top-0 z-50 no-print" style="background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.04);">
+  <div class="max-w-[1500px] mx-auto px-5 h-14 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/25">
+        <i data-lucide="id-card" class="w-5 h-5 text-indigo-400"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-extrabold tracking-tight">ID Card <span class="text-indigo-400">Studio</span></h1>
+        <p class="text-[9px] text-slate-600 font-mono">Industrial Card Generator · CR-80</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="resetForm()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-white transition-all">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> รีเซ็ต
+      </button>
+      <button onclick="downloadCardAsImage()" class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white text-xs shadow-lg shadow-indigo-500/20">
+        <i data-lucide="download" class="w-4 h-4"></i> ดาวน์โหลด PNG
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="no-print" style="background:linear-gradient(135deg,rgba(15,23,42,1) 0%,rgba(26,16,42,1) 50%,rgba(15,26,15,1) 100%);border-bottom:1px solid rgba(255,255,255,.03);">
+  <div class="max-w-[1500px] mx-auto px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-base font-extrabold">สร้างบัตร <span class="text-indigo-400">ระดับมืออาชีพ</span></h2>
+      <p class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Real-time</span>
+        · กรอกข้อมูล → ปรับรูป/ขนาด → ดาวน์โหลด PNG
+      </p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">แม่แบบ:</span>
+      <button onclick="applyTemplate('contractor')" class="preset-pill" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:#f59e0b;">
+        <i data-lucide="hard-hat" class="w-3 h-3"></i> ผู้รับเหมา
+      </button>
+      <button onclick="applyTemplate('forklift')" class="preset-pill" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#818cf8;">
+        <i data-lucide="truck" class="w-3 h-3"></i> โฟล์คลิฟท์
+      </button>
+      <button onclick="applyTemplate('employee')" class="preset-pill" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#34d399;">
+        <i data-lucide="briefcase" class="w-3 h-3"></i> พนักงาน
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="max-w-[1500px] mx-auto flex min-h-[calc(100vh-112px)]">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-[300px] flex-shrink-0 no-print" style="background:rgba(15,23,42,.5);border-right:1px solid rgba(255,255,255,.04);">
+    <div class="p-4 space-y-3">
+
+      <!-- COLORS -->
+      <div>
+        <p class="lbl flex items-center gap-1.5 pt-1"><i data-lucide="palette" class="w-3 h-3 text-indigo-400"></i> สีและธีม</p>
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="lbl">สีหลัก</label>
+              <div class="flex gap-2 items-center">
+                <input type="color" id="primaryColorInput" oninput="syncColor('primary')" value="#1e293b" class="w-8 h-8 rounded-lg border border-slate-700 cursor-pointer bg-transparent p-0.5 flex-shrink-0">
+                <input type="text" id="primaryColorText" oninput="updateCardDesignHex('primary',this.value)" value="#1E293B" class="inp font-mono text-xs uppercase">
+              </div>
+            </div>
+            <div>
+              <label class="lbl">สีเน้น</label>
+              <div class="flex gap-2 items-center">
+                <input type="color" id="accentColorInput" oninput="syncColor('accent')" value="#f59e0b" class="w-8 h-8 rounded-lg border border-slate-700 cursor-pointer bg-transparent p-0.5 flex-shrink-0">
+                <input type="text" id="accentColorText" oninput="updateCardDesignHex('accent',this.value)" value="#F59E0B" class="inp font-mono text-xs uppercase">
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="setSafetyColor('#1E293B','#F59E0B')" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300 text-[11px] font-bold transition-all hover:bg-slate-800">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#1E293B 50%,#F59E0B 50%)"></span>น้ำเงิน-เหลือง
+            </button>
+            <button onclick="setSafetyColor('#7f1d1d','#ef4444')" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-700 hover:border-rose-800 text-slate-300 text-[11px] font-bold transition-all hover:bg-rose-500/10">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#7f1d1d 50%,#ef4444 50%)"></span>🔴 อันตราย
+            </button>
+            <button onclick="setSafetyColor('#78350f','#f59e0b')" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-700 hover:border-amber-800 text-slate-300 text-[11px] font-bold transition-all hover:bg-amber-500/10">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#78350f 50%,#f59e0b 50%)"></span>🟡 ระวัง
+            </button>
+            <button onclick="setSafetyColor('#14532d','#22c55e')" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-700 hover:border-emerald-800 text-slate-300 text-[11px] font-bold transition-all hover:bg-emerald-500/10">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#14532d 50%,#22c55e 50%)"></span>🟢 ปลอดภัย
+            </button>
+            <button onclick="setSafetyColor('#1e3a8a','#60a5fa')" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-700 hover:border-blue-800 text-slate-300 text-[11px] font-bold transition-all hover:bg-blue-500/10">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#1e3a8a 50%,#60a5fa 50%)"></span>🔵 ข้อบังคับ
+            </button>
+            <button onclick="setSafetyColor('#1e293b','#94a3b8')" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300 text-[11px] font-bold transition-all hover:bg-slate-700">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#1e293b 50%,#94a3b8 50%)"></span>⚪ สำนักงาน
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEADER INFO -->
+      <div>
+        <p class="lbl flex items-center gap-1.5"><i data-lucide="building-2" class="w-3 h-3 text-indigo-400"></i> หัวบัตร</p>
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div>
+            <label class="lbl">โลโก้</label>
+            <div class="flex gap-2">
+              <label class="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-slate-600 hover:border-indigo-500 cursor-pointer text-xs text-slate-400 font-bold transition-all hover:text-indigo-400">
+                <i data-lucide="upload" class="w-3 h-3"></i>
+                <span id="logo-file-name">เลือกโลโก้</span>
+                <input type="file" id="logoUpload" accept="image/*" class="hidden" onchange="handleLogoUpload(this)">
+              </label>
+              <button onclick="useDefaultLogo()" class="px-2.5 rounded-xl border border-slate-700 hover:border-indigo-500 text-slate-400 hover:text-indigo-400 transition-all" title="Default">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="lbl">ชื่อบริษัท / หน่วยงาน</label>
+            <input type="text" id="companyNameInput" oninput="updateCardData()" class="inp" value="Bolt & Nut Industry Co., Ltd.">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="lbl">รหัสเอกสาร</label><input type="text" id="docNoInput" oninput="updateCardData()" class="inp font-mono" value="CON-2026-0BB"></div>
+            <div><label class="lbl">บาร์โค้ด</label><input type="text" id="barcodeNoInput" oninput="updateCardData()" class="inp font-mono" value="CERT-0BBID3BU"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHOTO + CONTROLS -->
+      <div>
+        <p class="lbl flex items-center gap-1.5"><i data-lucide="image" class="w-3 h-3 text-indigo-400"></i> รูปถ่ายผู้ถือบัตร</p>
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <label class="flex flex-col items-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-700 hover:border-indigo-500 cursor-pointer transition-all hover:bg-indigo-500/5 group">
+            <i data-lucide="image-plus" class="w-5 h-5 text-slate-500 group-hover:text-indigo-400 transition-colors"></i>
+            <span id="photo-file-name" class="text-[11px] text-slate-500 font-bold group-hover:text-slate-300 transition-colors">คลิกเพื่ออัปโหลดรูปภาพ</span>
+            <input type="file" id="photoUpload" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
+          </label>
+
+          <!-- Photo controls — shown after upload -->
+          <div id="photoControls" class="space-y-3 hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ปรับรูปภาพ</span>
+              <button onclick="resetPhotoTransform()" class="text-[10px] text-slate-500 hover:text-indigo-400 font-bold flex items-center gap-1 transition-colors">
+                <i data-lucide="undo-2" class="w-3 h-3"></i> รีเซ็ต
+              </button>
+            </div>
+
+            <!-- Zoom -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="lbl" style="margin:0">ขนาดรูป (Zoom)</label>
+                <span id="zoomVal" class="text-[10px] font-mono text-indigo-400">100%</span>
+              </div>
+              <input type="range" id="photoZoom" class="range-inp" min="50" max="300" value="100" oninput="applyPhotoTransform()">
+            </div>
+
+            <!-- X position -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="lbl" style="margin:0">เลื่อนซ้าย/ขวา</label>
+                <span id="xVal" class="text-[10px] font-mono text-indigo-400">0px</span>
+              </div>
+              <input type="range" id="photoX" class="range-inp" min="-200" max="200" value="0" oninput="applyPhotoTransform()">
+            </div>
+
+            <!-- Y position -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="lbl" style="margin:0">เลื่อนบน/ล่าง</label>
+                <span id="yVal" class="text-[10px] font-mono text-indigo-400">0px</span>
+              </div>
+              <input type="range" id="photoY" class="range-inp" min="-200" max="200" value="0" oninput="applyPhotoTransform()">
+            </div>
+
+            <p class="text-[10px] text-slate-600 flex items-center gap-1">
+              <i data-lucide="mouse-pointer-2" class="w-3 h-3"></i> ลากรูปในพรีวิวได้โดยตรง
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOLDER INFO -->
+      <div>
+        <p class="lbl flex items-center gap-1.5"><i data-lucide="user" class="w-3 h-3 text-indigo-400"></i> ข้อมูลผู้ถือบัตร</p>
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+
+          <!-- Name + font size -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="lbl" style="margin:0">ชื่อ-นามสกุล</label>
+              <div class="flex items-center gap-1.5">
+                <label class="lbl" style="margin:0;color:#818cf8;">ขนาดตัวอักษร</label>
+                <input type="number" id="nameFontSize" value="24" min="10" max="40" oninput="applyFontSizes()" class="w-14 text-center text-indigo-300 font-mono" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:7px;padding:3px 4px;font-size:11px;outline:none;">
+              </div>
+            </div>
+            <input type="text" id="holderNameInput" oninput="updateCardData()" class="inp font-bold" value="พรทิพย์ พัฒนารุ่งเรือง">
+          </div>
+
+          <!-- Company + font size -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="lbl" style="margin:0">บริษัทต้นสังกัด</label>
+              <div class="flex items-center gap-1.5">
+                <label class="lbl" style="margin:0;color:#818cf8;">ขนาด</label>
+                <input type="number" id="companyFontSize" value="13" min="8" max="24" oninput="applyFontSizes()" class="w-14 text-center text-indigo-300 font-mono" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:7px;padding:3px 4px;font-size:11px;outline:none;">
+              </div>
+            </div>
+            <input type="text" id="holderCompanyInput" oninput="updateCardData()" class="inp" value="บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด">
+          </div>
+
+          <!-- Course + font size -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="lbl" style="margin:0">หลักสูตร / สิทธิ์</label>
+              <div class="flex items-center gap-1.5">
+                <label class="lbl" style="margin:0;color:#818cf8;">ขนาด</label>
+                <input type="number" id="courseFontSize" value="13" min="8" max="22" oninput="applyFontSizes()" class="w-14 text-center text-indigo-300 font-mono" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:7px;padding:3px 4px;font-size:11px;outline:none;">
+              </div>
+            </div>
+            <input type="text" id="courseInput" oninput="updateCardData()" class="inp" value="การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="lbl">วันออกบัตร</label><input type="text" id="issueDateInput" oninput="updateCardData()" class="inp font-mono" value="3 มิ.ย. 2569"></div>
+            <div><label class="lbl">วันหมดอายุ</label><input type="text" id="expiryDateInput" oninput="updateCardData()" class="inp font-mono" value="3 มิ.ย. 2570"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="lbl">ประเภทบัตร (แท็ก)</label><input type="text" id="badgeTextInput" oninput="updateCardData()" class="inp font-mono uppercase" value="CONTRACTOR"></div>
+            <div><label class="lbl">ข้อความท้าย</label><input type="text" id="footerTextInput" oninput="updateCardData()" class="inp" value="โปรดแสดงบัตรทุกครั้งเมื่อเข้าพื้นที่"></div>
+          </div>
+
+          <!-- Company name on header font size -->
+          <div class="border-t border-slate-700/50 pt-2">
+            <div class="flex items-center justify-between">
+              <label class="lbl" style="margin:0">ขนาดชื่อบริษัทในหัวบัตร</label>
+              <input type="number" id="headerCompanyFontSize" value="15" min="9" max="22" oninput="applyFontSizes()" class="w-14 text-center text-indigo-300 font-mono" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:7px;padding:3px 4px;font-size:11px;outline:none;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- PREVIEW MAIN -->
+  <main class="flex-1 flex flex-col items-center py-7 px-6 gap-5" style="background:radial-gradient(ellipse at 60% 20%,rgba(99,102,241,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(245,158,11,.03) 0%,transparent 50%);">
+
+    <div class="w-full flex items-center justify-between no-print" style="max-width:680px;">
+      <div class="flex items-center gap-2 text-sm font-bold text-slate-400">
+        <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+        พรีวิว Real-time
+      </div>
+      <span class="text-[10px] font-mono text-slate-600 bg-slate-800/60 px-2 py-1 rounded-lg border border-slate-700">CR-80 · 634×400 px</span>
+    </div>
+
+    <!-- THE CARD -->
+    <div id="id-card-preview" class="id-card-wrap flex flex-col">
+      <div id="cardHeader" style="background-color:#1e293b;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div class="c-logo-box" id="cardLogoContainer">
+            <svg id="defaultLogoSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px;color:rgba(255,255,255,.65)">
+              <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L13.96 6.009h3.14a.75.75 0 01.593 1.21l-7.462 9.542a.75.75 0 01-1.258-.611l1.11-4.113h-3.14a.75.75 0 01-.593-1.21L13.673 1.956a.75.75 0 01.942-.361z" clip-rule="evenodd"/>
+            </svg>
+            <img id="uploadedLogoImg" style="display:none;width:24px;height:24px;object-fit:contain;" alt="">
+          </div>
+          <span id="cardCompanyName" style="font-size:15px;">Bolt &amp; Nut Industry Co., Ltd.</span>
+        </div>
+        <div id="cardDocNo" style="color:#f59e0b;font-size:13px;">CON-2026-0BB</div>
+      </div>
+
+      <div class="card-body">
+        <div class="c-photo-col">
+          <!-- draggable photo frame -->
+          <div class="c-photo-frame" id="photoFrame">
+            <div class="placeholder" id="photoPlaceholder">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <img id="cardPhoto" style="display:none;position:absolute;transform-origin:top left;will-change:transform;pointer-events:none;" alt="">
+          </div>
+          <div id="cardBadge" style="border-color:#f59e0b;color:#92400e;background:rgba(245,158,11,.1);">CONTRACTOR</div>
+        </div>
+
+        <div class="c-info-col">
+          <div>
+            <div class="c-field-label">ชื่อ-นามสกุล / NAME</div>
+            <div id="cardHolderName" style="font-size:24px;">พรทิพย์ พัฒนารุ่งเรือง</div>
+          </div>
+          <div>
+            <div class="c-field-label">บริษัทต้นสังกัด / COMPANY</div>
+            <div id="cardHolderCompany" style="font-size:13px;">บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด</div>
+          </div>
+          <div>
+            <div class="c-field-label">หลักสูตร / COURSE</div>
+            <div id="cardCourse" style="font-size:13px;">การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา</div>
+          </div>
+          <div class="c-dates">
+            <div><div class="c-date-label">ออกบัตร</div><div id="cardIssueDate" class="c-date-val">3 มิ.ย. 2569</div></div>
+            <div><div class="c-date-label">หมดอายุ</div><div id="cardExpiryDate" class="c-date-val expiry">3 มิ.ย. 2570</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer-bar">
+        <span id="cardFooterText">โปรดแสดงบัตรทุกครั้งเมื่อเข้าพื้นที่</span>
+        <span id="cardBarcodeNo">CERT-0BBID3BU</span>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="flex gap-3 no-print" style="max-width:680px;width:100%;">
+      <button onclick="downloadCardAsImage()" class="btn-success flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white text-sm shadow-lg shadow-emerald-500/15">
+        <i data-lucide="file-image" class="w-5 h-5"></i> ดาวน์โหลดบัตร PNG ความละเอียดสูง
+      </button>
+      <button onclick="window.print()" class="flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-slate-300 text-sm border border-slate-700 hover:border-slate-500 hover:text-white transition-all" style="background:rgba(30,41,59,.6);">
+        <i data-lucide="printer" class="w-4 h-4"></i> พิมพ์
+      </button>
+    </div>
+
+    <!-- TIP -->
+    <div class="no-print flex items-start gap-3 p-4 rounded-2xl" style="max-width:680px;width:100%;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.15);">
+      <i data-lucide="lightbulb" class="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0"></i>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        <strong class="text-slate-200">เคล็ดลับ:</strong> ปรับขนาดตัวอักษรแต่ละช่องได้อิสระ · ลากรูปในกรอบหรือใช้ Slider ซ้าย · PNG ที่ดาวน์โหลด 3× (1902×1200 px) เหมาะพิมพ์บัตร PVC CR-80
+      </p>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Photo drag state ──────────────────────────────────────────────────────────
+let photoLoaded = false;
+let drag = { active:false, startX:0, startY:0, origX:0, origY:0 };
+let photoTransform = { scale:1, x:0, y:0 };
+
+const frame = document.getElementById('photoFrame');
+const photoImg = document.getElementById('cardPhoto');
+
+// Mouse drag on photo frame
+frame.addEventListener('mousedown', e => {
+  if(!photoLoaded) return;
+  drag.active = true;
+  drag.startX = e.clientX;
+  drag.startY = e.clientY;
+  drag.origX = photoTransform.x;
+  drag.origY = photoTransform.y;
+  e.preventDefault();
+});
+document.addEventListener('mousemove', e => {
+  if(!drag.active) return;
+  photoTransform.x = drag.origX + (e.clientX - drag.startX);
+  photoTransform.y = drag.origY + (e.clientY - drag.startY);
+  // sync sliders
+  document.getElementById('photoX').value = Math.max(-200, Math.min(200, photoTransform.x));
+  document.getElementById('photoY').value = Math.max(-200, Math.min(200, photoTransform.y));
+  document.getElementById('xVal').textContent = Math.round(photoTransform.x)+'px';
+  document.getElementById('yVal').textContent = Math.round(photoTransform.y)+'px';
+  renderPhotoTransform();
+});
+document.addEventListener('mouseup', () => { drag.active = false; });
+
+// Touch drag
+frame.addEventListener('touchstart', e => {
+  if(!photoLoaded) return;
+  const t = e.touches[0];
+  drag.active = true;
+  drag.startX = t.clientX; drag.startY = t.clientY;
+  drag.origX = photoTransform.x; drag.origY = photoTransform.y;
+  e.preventDefault();
+}, {passive:false});
+document.addEventListener('touchmove', e => {
+  if(!drag.active) return;
+  const t = e.touches[0];
+  photoTransform.x = drag.origX + (t.clientX - drag.startX);
+  photoTransform.y = drag.origY + (t.clientY - drag.startY);
+  document.getElementById('photoX').value = Math.max(-200, Math.min(200, photoTransform.x));
+  document.getElementById('photoY').value = Math.max(-200, Math.min(200, photoTransform.y));
+  document.getElementById('xVal').textContent = Math.round(photoTransform.x)+'px';
+  document.getElementById('yVal').textContent = Math.round(photoTransform.y)+'px';
+  renderPhotoTransform();
+}, {passive:false});
+document.addEventListener('touchend', () => { drag.active = false; });
+
+function applyPhotoTransform() {
+  const zoom = parseFloat(document.getElementById('photoZoom').value);
+  photoTransform.scale = zoom / 100;
+  photoTransform.x = parseFloat(document.getElementById('photoX').value);
+  photoTransform.y = parseFloat(document.getElementById('photoY').value);
+  document.getElementById('zoomVal').textContent = zoom + '%';
+  document.getElementById('xVal').textContent = Math.round(photoTransform.x) + 'px';
+  document.getElementById('yVal').textContent = Math.round(photoTransform.y) + 'px';
+  renderPhotoTransform();
+}
+
+function renderPhotoTransform() {
+  if(!photoLoaded) return;
+  // Frame is 146×186, center the image by default
+  const fw = 146, fh = 186;
+  const iw = photoImg.naturalWidth || fw;
+  const ih = photoImg.naturalHeight || fh;
+  // fit cover at scale=1
+  const baseScale = Math.max(fw/iw, fh/ih);
+  const s = baseScale * photoTransform.scale;
+  // center offset
+  const cx = (fw - iw*s) / 2;
+  const cy = (fh - ih*s) / 2;
+  const tx = cx + photoTransform.x;
+  const ty = cy + photoTransform.y;
+  photoImg.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+  photoImg.style.transformOrigin = '0 0';
+  photoImg.style.width = iw + 'px';
+  photoImg.style.height = ih + 'px';
+}
+
+function resetPhotoTransform() {
+  photoTransform = {scale:1, x:0, y:0};
+  document.getElementById('photoZoom').value = 100;
+  document.getElementById('photoX').value = 0;
+  document.getElementById('photoY').value = 0;
+  document.getElementById('zoomVal').textContent = '100%';
+  document.getElementById('xVal').textContent = '0px';
+  document.getElementById('yVal').textContent = '0px';
+  renderPhotoTransform();
+}
+
+// ── Font sizes ────────────────────────────────────────────────────────────────
+function applyFontSizes() {
+  document.getElementById('cardHolderName').style.fontSize   = document.getElementById('nameFontSize').value + 'px';
+  document.getElementById('cardHolderCompany').style.fontSize = document.getElementById('companyFontSize').value + 'px';
+  document.getElementById('cardCourse').style.fontSize        = document.getElementById('courseFontSize').value + 'px';
+  document.getElementById('cardCompanyName').style.fontSize   = document.getElementById('headerCompanyFontSize').value + 'px';
+}
+
+// ── Data sync ─────────────────────────────────────────────────────────────────
+function updateCardData() {
+  document.getElementById('cardCompanyName').textContent = document.getElementById('companyNameInput').value;
+  document.getElementById('cardDocNo').textContent       = document.getElementById('docNoInput').value;
+  document.getElementById('cardHolderName').textContent  = document.getElementById('holderNameInput').value;
+  document.getElementById('cardHolderCompany').textContent = document.getElementById('holderCompanyInput').value;
+  document.getElementById('cardCourse').textContent      = document.getElementById('courseInput').value;
+  document.getElementById('cardIssueDate').textContent   = document.getElementById('issueDateInput').value;
+  document.getElementById('cardExpiryDate').textContent  = document.getElementById('expiryDateInput').value;
+  document.getElementById('cardBarcodeNo').textContent   = document.getElementById('barcodeNoInput').value;
+  document.getElementById('cardFooterText').textContent  = document.getElementById('footerTextInput').value;
+  document.getElementById('cardBadge').textContent       = document.getElementById('badgeTextInput').value;
+}
+
+// ── Color ─────────────────────────────────────────────────────────────────────
+function syncColor(type) {
+  const v = document.getElementById(type==='primary'?'primaryColorInput':'accentColorInput').value;
+  document.getElementById(type==='primary'?'primaryColorText':'accentColorText').value = v.toUpperCase();
+  updateCardDesign();
+}
+function updateCardDesignHex(type, val) {
+  if(/^#[0-9A-F]{6}$/i.test(val)) {
+    document.getElementById(type==='primary'?'primaryColorInput':'accentColorInput').value = val;
+    updateCardDesign();
+  }
+}
+function setSafetyColor(p, a) {
+  document.getElementById('primaryColorInput').value = p;
+  document.getElementById('primaryColorText').value = p.toUpperCase();
+  document.getElementById('accentColorInput').value = a;
+  document.getElementById('accentColorText').value = a.toUpperCase();
+  updateCardDesign();
+}
+function updateCardDesign() {
+  const p = document.getElementById('primaryColorInput').value;
+  const a = document.getElementById('accentColorInput').value;
+  document.getElementById('primaryColorText').value = p.toUpperCase();
+  document.getElementById('accentColorText').value = a.toUpperCase();
+  document.getElementById('cardHeader').style.backgroundColor = p;
+  document.getElementById('cardDocNo').style.color = a;
+  const b = document.getElementById('cardBadge');
+  b.style.borderColor = a;
+  b.style.color = darken(a, .38);
+  b.style.backgroundColor = hexRGBA(a, .1);
+}
+function hexRGBA(hex, alpha) {
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function darken(hex, amt) {
+  return `rgb(${[1,3,5].map(i=>Math.max(0,Math.floor(parseInt(hex.slice(i,i+2),16)*amt))).join(',')})`;
+}
+
+// ── Logo upload ───────────────────────────────────────────────────────────────
+function handleLogoUpload(input) {
+  const f = input.files[0]; if(!f) return;
+  document.getElementById('logo-file-name').textContent = f.name;
+  const r = new FileReader();
+  r.onload = e => {
+    document.getElementById('defaultLogoSvg').style.display = 'none';
+    const img = document.getElementById('uploadedLogoImg');
+    img.src = e.target.result; img.style.display = 'block';
+  };
+  r.readAsDataURL(f);
+}
+function useDefaultLogo() {
+  document.getElementById('logoUpload').value = '';
+  document.getElementById('logo-file-name').textContent = 'เลือกโลโก้';
+  document.getElementById('defaultLogoSvg').style.display = '';
+  document.getElementById('uploadedLogoImg').style.display = 'none';
+}
+
+// ── Photo upload ──────────────────────────────────────────────────────────────
+function handlePhotoUpload(input) {
+  const f = input.files[0]; if(!f) return;
+  document.getElementById('photo-file-name').textContent = f.name;
+  const r = new FileReader();
+  r.onload = e => {
+    photoLoaded = true;
+    photoImg.onload = () => {
+      resetPhotoTransform();
+      renderPhotoTransform();
+    };
+    photoImg.src = e.target.result;
+    photoImg.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('photoControls').classList.remove('hidden');
+    frame.style.cursor = 'grab';
+  };
+  r.readAsDataURL(f);
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────────
+const templates = {
+  contractor:{p:'#1e293b',a:'#f59e0b',company:'Bolt & Nut Industry Co., Ltd.',docNo:'CON-2026-0BB',barcode:'CERT-0BBID3BU',name:'พรทิพย์ พัฒนารุ่งเรือง',holderCo:'บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด',course:'การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา',issue:'3 มิ.ย. 2569',expiry:'3 มิ.ย. 2570',badge:'CONTRACTOR',footer:'โปรดแสดงบัตรทุกครั้งเมื่อเข้าพื้นที่'},
+  forklift:{p:'#1e3a8a',a:'#60a5fa',company:'Logistics Center & Warehouse',docNo:'FL-LIC-2026',barcode:'FL-88921-TH',name:'นาย สมชาย รักดี',holderCo:'ฝ่ายจัดการคลังสินค้ากลาง (WH-02)',course:'ผู้บังคับรถยกไฟฟ้า — Forklift Driver License',issue:'10 ม.ค. 2569',expiry:'10 ม.ค. 2572',badge:'FORKLIFT OPERATOR',footer:'ได้รับอนุญาตให้บังคับรถยกในคลังสินค้า'},
+  employee:{p:'#14532d',a:'#22c55e',company:'Green Energy Solution Co., Ltd.',docNo:'STAFF-ID',barcode:'EMP-9022',name:'นางสาว กัญญารัตน์ ใจงาม',holderCo:'ฝ่ายทรัพยากรบุคคล',course:'บัตรประจำตัวพนักงานและคีย์การ์ด',issue:'1 มี.ค. 2569',expiry:'ไม่มีกำหนดอายุ',badge:'STAFF MEMBER',footer:'เป็นพนักงานของ บจก. กรีน เอ็นเนอร์ยี่ โซลูชั่น'}
+};
+
+function applyTemplate(t) {
+  const d = templates[t]; if(!d) return;
+  document.getElementById('primaryColorInput').value = d.p;
+  document.getElementById('primaryColorText').value = d.p.toUpperCase();
+  document.getElementById('accentColorInput').value = d.a;
+  document.getElementById('accentColorText').value = d.a.toUpperCase();
+  document.getElementById('companyNameInput').value = d.company;
+  document.getElementById('docNoInput').value = d.docNo;
+  document.getElementById('barcodeNoInput').value = d.barcode;
+  document.getElementById('holderNameInput').value = d.name;
+  document.getElementById('holderCompanyInput').value = d.holderCo;
+  document.getElementById('courseInput').value = d.course;
+  document.getElementById('issueDateInput').value = d.issue;
+  document.getElementById('expiryDateInput').value = d.expiry;
+  document.getElementById('badgeTextInput').value = d.badge;
+  document.getElementById('footerTextInput').value = d.footer;
+  // reset font sizes
+  document.getElementById('nameFontSize').value = 24;
+  document.getElementById('companyFontSize').value = 13;
+  document.getElementById('courseFontSize').value = 13;
+  document.getElementById('headerCompanyFontSize').value = 15;
+  applyFontSizes();
+  updateCardData();
+  updateCardDesign();
+}
+
+function resetForm() { applyTemplate('contractor'); }
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, t='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show ' + t;
+  setTimeout(() => el.className = 'toast', 3200);
+}
+
+// ── Download ──────────────────────────────────────────────────────────────────
 function downloadCardAsImage() {
   const el = document.getElementById('id-card-preview');
 
