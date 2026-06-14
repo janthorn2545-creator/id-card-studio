@@ -351,56 +351,74 @@
     </div>
 
     <!-- THE CARD -->
-    <div id="id-card-preview" class="id-card-wrap flex flex-col" style="width:634px!important;height:400px!important;font-size:16px;">
-      <div id="cardHeader" style="background-color:#1e293b;">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-          <div class="c-logo-box" id="cardLogoContainer">
-            <svg id="defaultLogoSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px;color:rgba(255,255,255,.65)">
+    <div id="id-card-preview" style="width:634px;height:400px;min-width:634px;max-width:634px;min-height:400px;max-height:400px;position:relative;overflow:hidden;border-radius:20px;box-shadow:0 0 0 1px rgba(255,255,255,.05),0 25px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;flex-shrink:0;font-size:16px;line-height:1.5;">
+
+      <!-- HEADER -->
+      <div id="cardHeader" style="background-color:#1e293b;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:8px;overflow:hidden;flex-shrink:0;height:56px;box-sizing:border-box;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden;">
+          <div id="cardLogoContainer" style="width:32px;height:32px;border-radius:7px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg id="defaultLogoSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:rgba(255,255,255,.65);">
               <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L13.96 6.009h3.14a.75.75 0 01.593 1.21l-7.462 9.542a.75.75 0 01-1.258-.611l1.11-4.113h-3.14a.75.75 0 01-.593-1.21L13.673 1.956a.75.75 0 01.942-.361z" clip-rule="evenodd"/>
             </svg>
-            <img id="uploadedLogoImg" style="display:none;width:24px;height:24px;object-fit:contain;" alt="">
+            <img id="uploadedLogoImg" style="display:none;width:22px;height:22px;object-fit:contain;" alt="">
           </div>
-          <span id="cardCompanyName" style="font-size:14px;">Bolt &amp; Nut Industry Co., Ltd.</span>
+          <span id="cardCompanyName" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px;">Bolt &amp; Nut Industry Co., Ltd.</span>
         </div>
-        <div id="cardDocNo" style="color:#f59e0b;font-size:13px;">CON-2026-0BB</div>
+        <div id="cardDocNo" style="font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;color:#f59e0b;flex-shrink:0;white-space:nowrap;">CON-2026-0BB</div>
       </div>
 
-      <div class="card-body">
-        <div class="c-photo-col">
-          <!-- draggable photo frame -->
-          <div class="c-photo-frame" id="photoFrame">
-            <div class="placeholder" id="photoPlaceholder">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <!-- BODY -->
+      <div style="flex:1;background:#fff;padding:14px 16px;display:flex;gap:14px;overflow:hidden;min-height:0;box-sizing:border-box;">
+
+        <!-- Photo column -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;flex-shrink:0;">
+          <div id="photoFrame" style="width:146px;height:186px;border-radius:9px;overflow:hidden;background:#f1f5f9;border:3px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.1);position:relative;cursor:grab;user-select:none;flex-shrink:0;">
+            <div id="photoPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#cbd5e1" style="width:44px;height:44px;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
             <img id="cardPhoto" style="display:none;pointer-events:none;" alt="">
           </div>
-          <div id="cardBadge" style="border-color:#f59e0b;color:#92400e;background:rgba(245,158,11,.1);">CONTRACTOR</div>
+          <div id="cardBadge" style="width:146px;padding:5px 4px;border-radius:6px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;border:2px solid #f59e0b;color:#92400e;background:rgba(245,158,11,.1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;">CONTRACTOR</div>
         </div>
 
-        <div class="c-info-col">
-          <div>
-            <div class="c-field-label">ชื่อ-นามสกุล / NAME</div>
-            <div id="cardHolderName" style="font-size:22px;">พรทิพย์ พัฒนารุ่งเรือง</div>
+        <!-- Info column -->
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;overflow:hidden;padding:1px 0;">
+
+          <div style="overflow:hidden;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:2px;">ชื่อ-นามสกุล / NAME</div>
+            <div id="cardHolderName" style="font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:700;font-size:22px;color:#0f172a;letter-spacing:-0.2px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">พรทิพย์ พัฒนารุ่งเรือง</div>
           </div>
-          <div>
-            <div class="c-field-label">บริษัทต้นสังกัด / COMPANY</div>
-            <div id="cardHolderCompany" style="font-size:12px;">บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด</div>
+
+          <div style="overflow:hidden;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:2px;">บริษัทต้นสังกัด / COMPANY</div>
+            <div id="cardHolderCompany" style="font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:600;font-size:12px;color:#475569;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">บริษัท โบลท แอนด์ นัท อินดัสตี้ จำกัด</div>
           </div>
-          <div>
-            <div class="c-field-label">หลักสูตร / COURSE</div>
-            <div id="cardCourse" style="font-size:12px;">การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา</div>
+
+          <div style="overflow:hidden;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:2px;">หลักสูตร / COURSE</div>
+            <div id="cardCourse" style="font-family:'SarabunEmbed','Sarabun',sans-serif;font-weight:700;font-size:12px;color:#1e293b;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">การปฏิบัติงานอย่างปลอดภัยของผู้รับเหมา</div>
           </div>
-          <div class="c-dates">
-            <div><div class="c-date-label">ออกบัตร</div><div id="cardIssueDate" class="c-date-val">3 มิ.ย. 2569</div></div>
-            <div><div class="c-date-label">หมดอายุ</div><div id="cardExpiryDate" class="c-date-val expiry">3 มิ.ย. 2570</div></div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:7px;border-top:1px solid #e2e8f0;">
+            <div>
+              <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#94a3b8;">ออกบัตร</div>
+              <div id="cardIssueDate" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:#1e293b;margin-top:1px;">3 มิ.ย. 2569</div>
+            </div>
+            <div>
+              <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#94a3b8;">หมดอายุ</div>
+              <div id="cardExpiryDate" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#ef4444;margin-top:1px;">3 มิ.ย. 2570</div>
+            </div>
           </div>
+
         </div>
       </div>
 
-      <div class="card-footer-bar">
-        <span id="cardFooterText">โปรดแสดงบัตรทุกครั้งเมื่อเข้าพื้นที่</span>
-        <span id="cardBarcodeNo">CERT-0BBID3BU</span>
+      <!-- FOOTER -->
+      <div style="padding:7px 18px;display:flex;align-items:center;justify-content:space-between;background:#0f172a;flex-shrink:0;height:32px;box-sizing:border-box;overflow:hidden;">
+        <span id="cardFooterText" style="font-size:9px;color:rgba(255,255,255,.38);font-family:'SarabunEmbed','Sarabun',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;">โปรดแสดงบัตรทุกครั้งเมื่อเข้าพื้นที่</span>
+        <span id="cardBarcodeNo" style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,.25);letter-spacing:2px;flex-shrink:0;white-space:nowrap;">CERT-0BBID3BU</span>
       </div>
+
     </div>
 
     <!-- ACTIONS -->
